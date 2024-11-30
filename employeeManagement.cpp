@@ -1,9 +1,8 @@
-#include <iostream>
-#include <vector>
-#include <string>
+#include<bits/stdc++.h>
 using namespace std;
  
 int ID = 1;
+vector<pair<int,string>> requests;
 // Base class: Person
 class Person {
 protected:
@@ -64,8 +63,17 @@ public:
         return employeeID;
     }
 
+    int getAge(){
+        return age;
+    }
+
     string getName() const {
         return name;
+    }
+
+    string getDepartment()
+    {
+        return department;
     }
 };
 
@@ -130,6 +138,75 @@ public:
         }
     }
 
+    void handleRequests(vector<Employee>& employeeList)
+    {
+        if(requests.empty()){
+            cout << "No requests to show!" << endl;
+            return;
+        }
+        vector<int> deletedRequests;
+        cout << "\nRequests:\n";
+        int totalRequests = requests.size();
+        for(int i = 0; i < totalRequests; i++)
+        {
+            string oldDepartment;
+            for(auto &emp: employeeList){
+                if(emp.getEmployeeID() == requests[i].first){
+                    oldDepartment = emp.getDepartment();
+                    break;
+                }
+            }
+            cout << "Employee ID: " << requests[i].first << '\n';
+            cout << "Current Department: " << oldDepartment << '\n';
+            cout << "Requested Department: " << requests[i].second;
+
+            int choice;
+            while(true){
+                cout << "\n\nPress 1 to approve request\n";
+                cout << "Press 2 to deny request\n";
+                cout << "Press 3 to move to next request\n";
+                cout << "Press 4 to exit\n\n";
+                cout << "Enter your choice: ";
+                cin >> choice;
+
+                if(choice == 1){
+                    for(auto &emp: employeeList){
+                        if(emp.getEmployeeID() == requests[i].first){
+                            emp.updateDetails(emp.getName(), emp.getAge(), requests[i].second);
+                            break;
+                        }
+                    }
+                    // requests.erase(requests.begin() + i);
+                    deletedRequests.push_back(i);
+                    break;
+                }
+                else if(choice == 2){
+                    cout << "Request denied\n\n";
+                    // requests.erase(requests.begin() + i);
+                    deletedRequests.push_back(i);
+                    break;
+                }
+                else if(choice == 3){
+                    break;
+                } 
+                else if(choice == 4){
+                    cout << "Exiting\n\n";
+                    return;
+                } else{
+                    cout << "Invalid Input\n\n";
+                }
+            }
+        }
+
+        int deleted = 0;
+        for(auto dr: deletedRequests){
+            requests.erase(requests.begin() + dr - deleted);
+            deleted++;
+        }
+
+        cout << "\nRequests Over!\n";
+    }
+
     void displayProfile() const override {
         Person::displayProfile();
     }
@@ -154,7 +231,8 @@ void managerMenu(Manager& manager, vector<Employee>& employeeList) {
         cout << "3. Update Employee Details\n";
         cout << "4. View All Employees\n";
         cout << "5. View Profile\n";
-        cout << "6. Logout\n";
+        cout << "6. View Requests\n";
+        cout << "7. Logout\n";
         cout << "Enter your choice: ";
         cin >> choice;
 
@@ -188,12 +266,6 @@ void managerMenu(Manager& manager, vector<Employee>& employeeList) {
                 break;
             }
             case 3: {
-                // string newName, newDepartment;
-                // int newAge, id;
-                // cout << "Enter new details:\n";
-                // cout << "Enter Name: "; cin >> ws; getline(cin, newName);
-                // cout << "Enter Age: "; cin >> newAge;
-                // cout << "Enter Department: "; cin >> ws; getline(cin, newDepartment);
                 int id;
                 cout << "Enter employee id to update: "; cin >> id;
                 manager.updateEmployeeDetails(employeeList, id);
@@ -207,7 +279,12 @@ void managerMenu(Manager& manager, vector<Employee>& employeeList) {
                 manager.displayProfile();
                 break;
 
-            case 6:
+            case 6: {
+                manager.handleRequests(employeeList);
+                break;
+            }
+
+            case 7:
                 cout << "Logging out...\n";
                 return;
 
@@ -233,7 +310,8 @@ void employeeMenu(const vector<Employee>& employeeList) {
                     cout << "\nEmployee Menu:\n";
                     cout << "1. View Profile\n";
                     cout << "2. Change Password\n";
-                    cout << "3. Logout\n";
+                    cout << "3. Request department change\n";
+                    cout << "4. Logout\n";
                     cout << "Enter your choice: ";
                     cin >> choice;
 
@@ -252,7 +330,15 @@ void employeeMenu(const vector<Employee>& employeeList) {
                             break;
                         }
 
-                        case 3:
+                        case 3:{
+                            string newDepartment;
+                            cout << "Enter new department: "; cin >> ws; getline(cin,newDepartment);
+                            requests.push_back(make_pair(id, newDepartment));
+                            cout << "Request Made!\nThe changes will be done once approved by your manager\n";
+                            break;
+                        }
+
+                        case 4:
                             cout << "Logging out...\n";
                             return;
 
@@ -271,9 +357,17 @@ void employeeMenu(const vector<Employee>& employeeList) {
 
 int main() {
     Manager manager("Alice", 40, "manager123");
-    Employee e("yashraj", 23, 101, "eng", "emp1");
     vector<Employee> employeeList; // Shared employee list
-    employeeList.push_back(e);
+    Employee e1("yashraj", 23, 1, "eng", "emp1");
+    Employee e2("shreyansh", 24, 2, "hr", "emp2");
+    Employee e3("anshul", 25, 3, "testing", "emp3");
+    employeeList.push_back(e1);
+    employeeList.push_back(e2);
+    employeeList.push_back(e3);
+
+    requests.push_back({1, "consult"});
+    requests.push_back({2, "entertainment"});
+    requests.push_back({3, "security"});
 
     int choice;
     while (true) {
